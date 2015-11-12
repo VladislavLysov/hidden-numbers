@@ -1,0 +1,100 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/main_layout"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:paddingLeft="3dp"
+    android:paddingRight="3dp"
+    android:paddingTop="3dp"
+    android:paddingBottom="3dp" tools:context=".GameField">
+
+    <FrameLayout
+        android:id="@+id/statistics"
+        android:layout_width="fill_parent"
+        android:layout_height="25dp">
+        <RelativeLayout
+            android:id="@+id/relative1"
+            android:layout_gravity="top|start"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content">
+            <TextView
+                android:id="@+id/time_txt"
+                android:textSize="20sp"
+                android:textColor="#2f4f4f"
+                android:text="@string/time"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+
+            <TextView
+                android:id="@+id/time"
+                android:textColor="#ff6db9ff"
+                android:textSize="20sp"
+                android:layout_marginLeft="5dp"
+                android:layout_marginStart="5dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_toRightOf="@+id/time_txt"
+                android:layout_toEndOf="@+id/time_txt"/>
+        </RelativeLayout>
+
+        <RelativeLayout
+            android:id="@+id/relative2"
+            android:layout_gravity="top|center"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content">
+            <TextView
+                android:id="@+id/scores_txt"
+                android:textColor="#2f4f4f"
+                android:text="@string/scores"
+                android:textSize="20sp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"/>
+
+            <TextView
+                android:id="@+id/scores"
+                android:textSize="20sp"
+                android:textColor="#ff6db9ff"
+                android:layout_marginLeft="5dp"
+                android:layout_marginStart="5dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerHorizontal="true"
+                android:layout_toRightOf="@+id/scores_txt"
+                android:layout_toEndOf="@+id/scores_txt"/>
+        </RelativeLayout>
+
+        <RelativeLayout
+            android:layout_gravity="top|end"
+            android:id="@+id/relative3"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content">
+            <TextView
+                android:id="@+id/errors_txt"
+                android:textColor="#2f4f4f"
+                android:text="@string/errors"
+                android:textSize="20sp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+
+            <TextView
+                android:id="@+id/errors"
+                android:textSize="20sp"
+                android:layout_marginLeft="5dp"
+                android:layout_marginStart="5dp"
+                android:textColor="#ff6db9ff"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_toRightOf="@+id/errors_txt"
+                android:layout_toEndOf="@+id/errors_txt"/>
+        </RelativeLayout>
+    </FrameLayout>
+
+    <TableLayout
+        android:id="@+id/game_field"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:layout_below="@+id/statistics"
+        android:stretchColumns="*">
+    </TableLayout>
+
+</RelativeLayout>
