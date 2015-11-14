@@ -14,7 +14,7 @@ public class LevelUtils {
         Map<Integer, HiddenNumberCell> hiddenNumbersPositions = new HashMap<>();
         List<Integer> ocuppiedRows = new ArrayList<>();
         List<Integer> ocuppiedColumns = new ArrayList<>();
-        for (int i = 0; i < hiddenNumbersCount; i++) {
+        for (int i = 1; i < hiddenNumbersCount + 1; i++) {
             HiddenNumberCell hiddenNumber = generateHiddenNumberCell(i, ocuppiedRows, ocuppiedColumns,
                                                                      rowsCount, columnsCount);
             hiddenNumbersPositions.put(i, hiddenNumber);
