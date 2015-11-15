@@ -26,12 +26,14 @@ public class LevelUtils {
 
     private static HiddenNumberCell generateHiddenNumberCell(int number, List<Integer> ocuppiedRows, List<Integer> ocuppiedColumns,
                              int rowsCount, int columnsCount) {
-        int row = -1;
-        int column = -1;
-        while ((row == -1 && column == -1) || (ocuppiedRows.contains(row) && ocuppiedColumns.contains(column))) {
-            row = new Random().nextInt(rowsCount);
-            column = new Random().nextInt(columnsCount);
+        while (true) {
+            int row = new Random().nextInt(rowsCount);
+            int column = new Random().nextInt(columnsCount);
+            if (!(ocuppiedRows.contains(row) && ocuppiedColumns.contains(column))) {
+                ocuppiedRows.add(row);
+                ocuppiedColumns.add(column);
+                return new HiddenNumberCell(number, column, row);
+            }
         }
-        return new HiddenNumberCell(number, column, row);
     }
 }

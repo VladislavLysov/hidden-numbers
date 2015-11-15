@@ -1,5 +1,8 @@
 package com.lysov.vlad.hiddennumbers;
 
+import android.app.AlertDialog;
+import android.app.Dialog;
+import android.content.DialogInterface;
 import android.content.res.Resources;
 import android.graphics.Color;
 import android.graphics.Typeface;
@@ -9,22 +12,28 @@ import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
 import android.util.TypedValue;
 import android.view.Gravity;
+import android.view.KeyEvent;
+import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 
+import android.widget.ImageButton;
 import android.widget.TableLayout;
 import android.widget.TableRow;
 import android.widget.TextView;
 
+import com.google.android.gms.analytics.HitBuilders;
+import com.google.android.gms.analytics.Tracker;
+
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
 
 public class GameField extends ActionBarActivity {
-
-    private static final Map<Integer, Level> LEVELS = generateLevels();
 
     private Map<Integer, Button> hiddenButtons = new TreeMap<>();
 
@@ -38,10 +47,16 @@ public class GameField extends ActionBarActivity {
 
     private TreeSet<Integer> clickedNumbers = new TreeSet<>();
 
-    private static int currentLevelNumber = 0;
+    protected static int currentLevelNumber = 0;
 
     private static MediaPlayer rightClick;
     private static MediaPlayer wrongClick;
+
+    private static Typeface tf;
+
+    private Tracker tracker;
+
+    private int timeOnPause;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -55,13 +70,22 @@ public class GameField extends ActionBarActivity {
         if (wrongClick == null) {
             wrongClick = MediaPlayer.create(this, R.raw.button_sound_wrong);
         }
+
+        if (tracker == null) {
+            AnalyticsApplication application = (AnalyticsApplication) getApplication();
+            tracker = application.getDefaultTracker();
+        }
+
         clickedNumbers.clear();
         isGameStarted = false;
         initTopMenu();
 
-        initGameFieldTableLayout(LEVELS.get(currentLevelNumber));
-        initShowTimer(LEVELS.get(currentLevelNumber));
-        initGameTimer();
+        Level currentLevel = generateLevel();
+
+        initFont();
+        initGameFieldTableLayout(currentLevel);
+        initShowTimer(currentLevel);
+        initGameTimer(15000);
         gameTimer.start();
         showTimer.start();
     }
@@ -81,9 +105,9 @@ public class GameField extends ActionBarActivity {
         return super.onOptionsItemSelected(item);
     }
 
-    private void initGameTimer() {
+    private void initGameTimer(int timer) {
         final TextView time = (TextView) findViewById(R.id.time);
-        gameTimer = new CountDownTimer(30000, 1000) {
+        gameTimer = new CountDownTimer(timer, 1000) {
             @Override
             public void onTick(long millisUntilFinished) {
                 time.setText(String.valueOf(millisUntilFinished / 1000));
@@ -91,8 +115,7 @@ public class GameField extends ActionBarActivity {
 
             @Override
             public void onFinish() {
-                currentLevelNumber++;
-                GameField.this.recreate();
+                gameOver();
             }
         };
     }
@@ -159,13 +182,13 @@ public class GameField extends ActionBarActivity {
 
     private void showHiddenNumbers() {
         for (Map.Entry<Integer, Button> hiddenButtonEntry : hiddenButtons.entrySet()) {
-            hiddenButtonEntry.getValue().setTextColor(Color.RED);
+            hiddenButtonEntry.getValue().setTextSize(TypedValue.COMPLEX_UNIT_SP, 21);
         }
     }
 
     private void hideHiddenNumbers() {
         for (Map.Entry<Integer, Button> hiddenButtonEntry : hiddenButtons.entrySet()) {
-            hiddenButtonEntry.getValue().setTextColor(Color.GRAY);
+            hiddenButtonEntry.getValue().setTextSize(0);
         }
     }
 
@@ -177,8 +200,8 @@ public class GameField extends ActionBarActivity {
             TableRow tableRow = (TableRow) gameField.getChildAt(hiddenNumberCell.getRow());
             final Button hiddenButton = (Button) tableRow.getChildAt(hiddenNumberCell.getColumn());
 
-            hiddenButton.setTypeface(null, Typeface.BOLD);
-            hiddenButton.setTextSize(TypedValue.COMPLEX_UNIT_SP, 40); // TODO replace text size to sp
+            hiddenButton.setTypeface(tf);
+            hiddenButton.setTextSize(TypedValue.COMPLEX_UNIT_SP, 0);
 
             hiddenButton.setText(String.valueOf(hiddenNumberCell.getNumber()));
             hiddenButton.setOnClickListener(new View.OnClickListener() {
@@ -189,20 +212,21 @@ public class GameField extends ActionBarActivity {
                     }
                     Integer clickedHiddenNumber = Integer.valueOf(hiddenButton.getText().toString());
                     if ((clickedNumbers.isEmpty() && clickedHiddenNumber == 1) ||
-                            (clickedNumbers.last() == clickedHiddenNumber - 1)) {
+                            (!clickedNumbers.isEmpty() && clickedNumbers.last() == clickedHiddenNumber - 1)) {
                         rightClick.start();
                         clickedNumbers.add(clickedHiddenNumber);
-                        hiddenButton.setTextColor(Color.RED);
+                        hiddenButton.setTextSize(TypedValue.COMPLEX_UNIT_SP, 21);
                         if (currentLevel.getHiddenNumbersCount() == clickedNumbers.size()) {
-                            currentLevelNumber++;
-                            GameField.this.recreate();
+                            if (currentLevelNumber == 23) {
+                                gameOver();
+                            } else {
+                                gameTimer.cancel();
+                                currentLevelNumber++;
+                                GameField.this.recreate();
+                            }
                         }
                     } else {
                         updateErrors();
-                    }
-
-                    if (errors == 3) {
-                        //gameOver();
                     }
                 }
             });
@@ -211,10 +235,18 @@ public class GameField extends ActionBarActivity {
     }
 
     private void updateErrors() {
-        TextView errorsTxt = (TextView) findViewById(R.id.errors);
         errors++;
+        TextView errorsTxt = (TextView) findViewById(R.id.errors);
         wrongClick.start();
         errorsTxt.setText(String.valueOf(errors));
+        if (errors > 2) {
+            gameOver();
+        }
+    }
+
+    private void gameOver() {
+        gameTimer.cancel();
+        showGameOverDialog();
     }
 
     private TableRow initTableRow() {
@@ -229,9 +261,8 @@ public class GameField extends ActionBarActivity {
 
     private View initButton() {
         Button button = new Button(this);
-        button.setText("Button test");
-        button.setTextColor(Color.GRAY);
-        button.setBackgroundColor(Color.GRAY);
+        button.setBackgroundResource(R.drawable.buton_background_blue);
+        button.setTextColor(Color.YELLOW);
         button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -243,8 +274,6 @@ public class GameField extends ActionBarActivity {
 
     private void initLayoutParams(View view) {
         TableRow.LayoutParams buttonGridLayoutParams = (TableRow.LayoutParams) view.getLayoutParams();
-        buttonGridLayoutParams.width = TableLayout.LayoutParams.MATCH_PARENT;
-        buttonGridLayoutParams.height = TableLayout.LayoutParams.MATCH_PARENT;
         int margin = Math.round(convertDpToPixes(5));
         buttonGridLayoutParams.bottomMargin = margin;
         buttonGridLayoutParams.leftMargin = margin;
@@ -253,31 +282,138 @@ public class GameField extends ActionBarActivity {
         buttonGridLayoutParams.weight = 1.0f;
     }
 
-    private static Map<Integer, Level> generateLevels() {
-        Map<Integer, Level> levels = new TreeMap<>();
-        int levelNumber = 0;
-
-        for (; levelNumber < 2; levelNumber++) {
-            levels.put(levelNumber, LevelUtils.generateLevel(levelNumber, 2, 2, 1, 1000));
+    private static Level generateLevel() {
+        if (currentLevelNumber < 2) {
+            return LevelUtils.generateLevel(currentLevelNumber, 3, 3, 2, 500);
         }
 
-        for (; levelNumber < 5; levelNumber++) {
-            levels.put(levelNumber, LevelUtils.generateLevel(levelNumber, 3, 3, 3, 2000));
+        if (currentLevelNumber >= 2 && currentLevelNumber < 5) {
+            return LevelUtils.generateLevel(currentLevelNumber, 4, 4, 4, 1500);
         }
 
-        for (; levelNumber < 9; levelNumber++) {
-            levels.put(levelNumber, LevelUtils.generateLevel(levelNumber, 4, 4, 4, 3000));
+        if (currentLevelNumber >= 5 && currentLevelNumber < 9) {
+            return LevelUtils.generateLevel(currentLevelNumber, 5, 5, 5, 2000);
         }
 
-        for (; levelNumber < 13; levelNumber++) {
-            levels.put(levelNumber, LevelUtils.generateLevel(levelNumber, 5, 5, 5, 4000));
+        if (currentLevelNumber >= 9 && currentLevelNumber < 13) {
+            return LevelUtils.generateLevel(currentLevelNumber, 6, 6, 6, 3500);
         }
 
-        return levels;
+        if (currentLevelNumber >= 13 && currentLevelNumber < 18) {
+            return LevelUtils.generateLevel(currentLevelNumber, 7, 7, 7, 4000);
+        }
+
+        if (currentLevelNumber >= 18 && currentLevelNumber < 24) {
+            return LevelUtils.generateLevel(currentLevelNumber, 8, 8, 8, 4500);
+        }
+
+        return null;
     }
 
     private float convertDpToPixes(float px) {
         Resources r = getResources();
         return TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, px, r.getDisplayMetrics());
     }
+
+    private void setFonts(String font) {
+        if (tf == null) {
+            tf = Typeface.createFromAsset(getAssets(), "fonts/" + font);
+        }
+        List<TextView> textViews = new ArrayList<>();
+        textViews.add((TextView) findViewById(R.id.time_txt));
+        textViews.add((TextView) findViewById(R.id.time));
+        textViews.add((TextView) findViewById(R.id.errors_txt));
+        textViews.add((TextView) findViewById(R.id.errors));
+        textViews.add((TextView) findViewById(R.id.scores_txt));
+        textViews.add((TextView) findViewById(R.id.scores));
+        for (TextView textView : textViews) {
+            textView.setTypeface(tf);
+        }
+    }
+
+    private void initFont() {
+        setFonts("Chunkfive.otf");
+    }
+
+    private void showGameOverDialog() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        LayoutInflater inflater  = this.getLayoutInflater();
+        View scores_layout = inflater.inflate(R.layout.game_over, null);
+        builder.setView(scores_layout);
+        Typeface tf = Typeface.createFromAsset(getAssets(), "fonts/" + "Sail-Regular.otf");
+
+        TextView gameOverScoresText = (TextView) scores_layout.findViewById(R.id.game_over_scores_text);
+        gameOverScoresText.setTypeface(tf);
+
+        TextView gameOverScores = (TextView) scores_layout.findViewById(R.id.game_over_scores);
+        gameOverScores.setTypeface(tf);
+
+        TextView gameOverPoints = (TextView) scores_layout.findViewById(R.id.game_over_points);
+        gameOverPoints.setTypeface(tf);
+        gameOverScores.setText(String.valueOf(currentLevelNumber));
+
+        final AlertDialog gameOverDialog = builder.create();
+        ImageButton dialogButton = (ImageButton) scores_layout.findViewById(R.id.game_over_dialog_ok_btn);
+        dialogButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                tracker.send(new HitBuilders.EventBuilder()
+                        .setCategory("Action")
+                        .setAction("Game Over. New game click")
+                        .build());
+                currentLevelNumber = 0;
+                rightClick.start();
+                gameOverDialog.dismiss();
+                recreate();
+            }
+        });
+
+        gameOverDialog.setOnKeyListener(new Dialog.OnKeyListener() {
+
+            @Override
+            public boolean onKey(DialogInterface arg0, int keyCode,
+                                 KeyEvent event) {
+                if (keyCode == KeyEvent.KEYCODE_BACK) {
+                    gameOverDialog.dismiss();
+                    finish();
+                }
+                return true;
+            }
+        });
+        gameOverDialog.show();
+    }
+
+//    @Override
+//    protected void onStop() {
+//        super.onStop();
+//        MainMenu.mainMenuTheme.pause();
+//        gameTimer.cancel();
+//    }
+//
+//    @Override
+//    protected void onPause() {
+//        super.onPause();
+//        MainMenu.mainMenuTheme.pause();
+//        String timeOnPauseTxt = String.valueOf(((TextView) findViewById(R.id.time)).getText());
+//        timeOnPause = Integer.parseInt(timeOnPauseTxt);
+//        gameTimer.cancel();
+//    }
+//
+//    @Override
+//    protected void onResume() {
+//        super.onResume();
+//        if (!MainMenu.mainMenuTheme.isPlaying()) {
+//            MainMenu.mainMenuTheme.start();
+//        }
+//        initGameTimer(timeOnPause);
+//        gameTimer.start();
+//    }
+//
+//    @Override
+//    protected void onStart() {
+//        super.onStart();
+//        if (!MainMenu.mainMenuTheme.isPlaying()) {
+//            MainMenu.mainMenuTheme.start();
+//        }
+//    }
 }
