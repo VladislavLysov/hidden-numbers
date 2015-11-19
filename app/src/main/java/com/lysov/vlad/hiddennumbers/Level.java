@@ -11,6 +11,7 @@ public class Level {
     private int columnsCount;
     private int hiddenNumbersCount;
     private int timeToShowHiddenCells;
+    private int textSize;
     private Map<Integer, HiddenNumberCell> hiddenNumbersPositions= new HashMap<>();
 
     public Level(int rowsCount, int columnsCount, int hiddenNumbersCount) {
@@ -41,6 +42,16 @@ public class Level {
         this.hiddenNumbersCount = hiddenNumbersCount;
         this.timeToShowHiddenCells = timeToShowHiddenCells;
         this.hiddenNumbersPositions = hiddenNumbersPositions;
+    }
+
+    public Level(int levelNumber, int rowsCount, int columnsCount, int hiddenNumbersCount, int timeToShowHiddenCells, Map<Integer, HiddenNumberCell> hiddenNumbersPositions, int textSize) {
+        this.levelNumber = levelNumber;
+        this.rowsCount = rowsCount;
+        this.columnsCount = columnsCount;
+        this.hiddenNumbersCount = hiddenNumbersCount;
+        this.timeToShowHiddenCells = timeToShowHiddenCells;
+        this.hiddenNumbersPositions = hiddenNumbersPositions;
+        this.textSize = textSize;
     }
 
     public int getRowsCount() {
@@ -89,5 +100,13 @@ public class Level {
 
     public void setTimeToShowHiddenCells(int timeToShowHiddenCells) {
         this.timeToShowHiddenCells = timeToShowHiddenCells;
+    }
+
+    public int getTextSize() {
+        return textSize;
+    }
+
+    public void setTextSize(int textSize) {
+        this.textSize = textSize;
     }
 }

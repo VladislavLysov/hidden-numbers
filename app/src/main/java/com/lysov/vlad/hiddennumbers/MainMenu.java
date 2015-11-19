@@ -27,6 +27,8 @@ public class MainMenu extends ActionBarActivity {
 
     private Tracker tracker;
 
+    private boolean isNewGamePressed;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -47,16 +49,10 @@ public class MainMenu extends ActionBarActivity {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
-
-        //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
             return true;
         }
-
         return super.onOptionsItemSelected(item);
     }
 
@@ -68,6 +64,7 @@ public class MainMenu extends ActionBarActivity {
             @Override
             public void onClick(View v) {
                 GameField.currentLevelNumber = 0;
+                isNewGamePressed = true;
                 Intent intent = new Intent(MainMenu.this, GameField.class);
                 v.startAnimation(shake);
                 click.start();
@@ -131,6 +128,36 @@ public class MainMenu extends ActionBarActivity {
         requestNewInterstitial();
         if (mInterstitialAd.isLoaded()) {
             mInterstitialAd.show();
+        }
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        isNewGamePressed = false;
+        mainMenuTheme.start();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        isNewGamePressed = false;
+        mainMenuTheme.start();
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        if (!isNewGamePressed) {
+            mainMenuTheme.pause();
+        }
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        if (!isNewGamePressed) {
+            mainMenuTheme.pause();
         }
     }
 }

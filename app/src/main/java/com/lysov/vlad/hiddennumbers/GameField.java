@@ -8,6 +8,7 @@ import android.graphics.Color;
 import android.graphics.Typeface;
 import android.media.MediaPlayer;
 import android.os.CountDownTimer;
+import android.os.Vibrator;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
 import android.util.TypedValue;
@@ -41,6 +42,9 @@ public class GameField extends ActionBarActivity {
     private static CountDownTimer hideTimer;
     private static CountDownTimer gameTimer;
 
+    private static final int TIMER = 10;
+    private static final int MAX_ERROR_NUMBERS = 3;
+
     private static boolean isGameStarted;
 
     private static int errors = 0;
@@ -53,10 +57,14 @@ public class GameField extends ActionBarActivity {
     private static MediaPlayer wrongClick;
 
     private static Typeface tf;
+    private static Vibrator vibrator;
 
     private Tracker tracker;
 
-    private int timeOnPause;
+    private int timer = TIMER;
+    private boolean isGameOver;
+
+    private Level currentLevel;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -80,13 +88,13 @@ public class GameField extends ActionBarActivity {
         isGameStarted = false;
         initTopMenu();
 
-        Level currentLevel = generateLevel();
+        currentLevel = generateLevel();
 
+        timer = TIMER;
         initFont();
         initGameFieldTableLayout(currentLevel);
         initShowTimer(currentLevel);
-        initGameTimer(15000);
-        gameTimer.start();
+        initGameTimer(timer);
         showTimer.start();
     }
 
@@ -107,7 +115,7 @@ public class GameField extends ActionBarActivity {
 
     private void initGameTimer(int timer) {
         final TextView time = (TextView) findViewById(R.id.time);
-        gameTimer = new CountDownTimer(timer, 1000) {
+        gameTimer = new CountDownTimer(timer * 1000, 1000) {
             @Override
             public void onTick(long millisUntilFinished) {
                 time.setText(String.valueOf(millisUntilFinished / 1000));
@@ -149,6 +157,7 @@ public class GameField extends ActionBarActivity {
             public void onFinish() {
                 hideHiddenNumbers();
                 isGameStarted = true;
+                gameTimer.start();
             }
         };
     }
@@ -160,7 +169,7 @@ public class GameField extends ActionBarActivity {
         final TextView time = (TextView) findViewById(R.id.time);
         scores.setText(String.valueOf(currentLevelNumber));
         errorsTxt.setText(String.valueOf(errors));
-        time.setText(String.valueOf(30));
+        time.setText(String.valueOf(TIMER));
     }
 
     private void initGameFieldTableLayout(Level currentLevel) {
@@ -182,7 +191,7 @@ public class GameField extends ActionBarActivity {
 
     private void showHiddenNumbers() {
         for (Map.Entry<Integer, Button> hiddenButtonEntry : hiddenButtons.entrySet()) {
-            hiddenButtonEntry.getValue().setTextSize(TypedValue.COMPLEX_UNIT_SP, 21);
+            hiddenButtonEntry.getValue().setTextSize(TypedValue.COMPLEX_UNIT_SP, currentLevel.getTextSize());
         }
     }
 
@@ -215,7 +224,7 @@ public class GameField extends ActionBarActivity {
                             (!clickedNumbers.isEmpty() && clickedNumbers.last() == clickedHiddenNumber - 1)) {
                         rightClick.start();
                         clickedNumbers.add(clickedHiddenNumber);
-                        hiddenButton.setTextSize(TypedValue.COMPLEX_UNIT_SP, 21);
+                        hiddenButton.setTextSize(TypedValue.COMPLEX_UNIT_SP, currentLevel.getTextSize());
                         if (currentLevel.getHiddenNumbersCount() == clickedNumbers.size()) {
                             if (currentLevelNumber == 23) {
                                 gameOver();
@@ -237,14 +246,18 @@ public class GameField extends ActionBarActivity {
     private void updateErrors() {
         errors++;
         TextView errorsTxt = (TextView) findViewById(R.id.errors);
+        if (vibrator.hasVibrator()) {
+            vibrator.vibrate(200);
+        }
         wrongClick.start();
         errorsTxt.setText(String.valueOf(errors));
-        if (errors > 2) {
+        if (errors >= MAX_ERROR_NUMBERS) {
             gameOver();
         }
     }
 
     private void gameOver() {
+        isGameOver = true;
         gameTimer.cancel();
         showGameOverDialog();
     }
@@ -261,8 +274,9 @@ public class GameField extends ActionBarActivity {
 
     private View initButton() {
         Button button = new Button(this);
-        button.setBackgroundResource(R.drawable.buton_background_blue);
-        button.setTextColor(Color.YELLOW);
+        button.setBackgroundResource(R.drawable.game_button);
+        button.setTextColor(Color.GREEN);
+        button.setTypeface(tf);
         button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -284,27 +298,35 @@ public class GameField extends ActionBarActivity {
 
     private static Level generateLevel() {
         if (currentLevelNumber < 2) {
-            return LevelUtils.generateLevel(currentLevelNumber, 3, 3, 2, 500);
+            return LevelUtils.generateLevel(currentLevelNumber, 3, 3, 2, 1000, 36);
         }
 
         if (currentLevelNumber >= 2 && currentLevelNumber < 5) {
-            return LevelUtils.generateLevel(currentLevelNumber, 4, 4, 4, 1500);
+            return LevelUtils.generateLevel(currentLevelNumber, 4, 4, 4, 2000, 32);
         }
 
         if (currentLevelNumber >= 5 && currentLevelNumber < 9) {
-            return LevelUtils.generateLevel(currentLevelNumber, 5, 5, 5, 2000);
+            return LevelUtils.generateLevel(currentLevelNumber, 5, 5, 5, 2500, 28);
         }
 
         if (currentLevelNumber >= 9 && currentLevelNumber < 13) {
-            return LevelUtils.generateLevel(currentLevelNumber, 6, 6, 6, 3500);
+            return LevelUtils.generateLevel(currentLevelNumber, 6, 6, 6, 3000, 24);
         }
 
         if (currentLevelNumber >= 13 && currentLevelNumber < 18) {
-            return LevelUtils.generateLevel(currentLevelNumber, 7, 7, 7, 4000);
+            return LevelUtils.generateLevel(currentLevelNumber, 7, 7, 8, 3500, 22);
         }
 
         if (currentLevelNumber >= 18 && currentLevelNumber < 24) {
-            return LevelUtils.generateLevel(currentLevelNumber, 8, 8, 8, 4500);
+            return LevelUtils.generateLevel(currentLevelNumber, 8, 8, 10, 4000, 20);
+        }
+
+        if (currentLevelNumber >= 24 && currentLevelNumber < 28) {
+            return LevelUtils.generateLevel(currentLevelNumber, 8, 8, 12, 4000, 20);
+        }
+
+        if (currentLevelNumber >= 28 && currentLevelNumber < 34) {
+            return LevelUtils.generateLevel(currentLevelNumber, 9, 9, 15, 4000, 20);
         }
 
         return null;
@@ -383,37 +405,51 @@ public class GameField extends ActionBarActivity {
         gameOverDialog.show();
     }
 
-//    @Override
-//    protected void onStop() {
-//        super.onStop();
-//        MainMenu.mainMenuTheme.pause();
-//        gameTimer.cancel();
-//    }
-//
-//    @Override
-//    protected void onPause() {
-//        super.onPause();
-//        MainMenu.mainMenuTheme.pause();
-//        String timeOnPauseTxt = String.valueOf(((TextView) findViewById(R.id.time)).getText());
-//        timeOnPause = Integer.parseInt(timeOnPauseTxt);
-//        gameTimer.cancel();
-//    }
-//
-//    @Override
-//    protected void onResume() {
-//        super.onResume();
-//        if (!MainMenu.mainMenuTheme.isPlaying()) {
-//            MainMenu.mainMenuTheme.start();
-//        }
-//        initGameTimer(timeOnPause);
-//        gameTimer.start();
-//    }
-//
-//    @Override
-//    protected void onStart() {
-//        super.onStart();
-//        if (!MainMenu.mainMenuTheme.isPlaying()) {
-//            MainMenu.mainMenuTheme.start();
-//        }
-//    }
+    @Override
+    protected void onStop() {
+        super.onStop();
+        saveAndCancelTimerState();
+        MainMenu.mainMenuTheme.pause();
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        saveAndCancelTimerState();
+        MainMenu.mainMenuTheme.pause();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        startTimerAfterGamePause();
+        if (!MainMenu.mainMenuTheme.isPlaying()) {
+            MainMenu.mainMenuTheme.start();
+        }
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        startTimerAfterGamePause();
+        if (!MainMenu.mainMenuTheme.isPlaying()) {
+            MainMenu.mainMenuTheme.start();
+        }
+    }
+
+    private void startTimerAfterGamePause() {
+        if (gameTimer == null && !isGameOver) {
+            initGameTimer(timer);
+            gameTimer.start();
+        }
+    }
+
+    private void saveAndCancelTimerState() {
+        if (gameTimer != null && !isGameOver) {
+            gameTimer.cancel();
+            gameTimer = null;
+            TextView time = (TextView) findViewById(R.id.time);
+            timer = Integer.valueOf(String.valueOf(time.getText()));
+        }
+    }
 }
