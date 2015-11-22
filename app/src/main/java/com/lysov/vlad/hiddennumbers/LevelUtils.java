@@ -10,7 +10,7 @@ import java.util.Random;
 public class LevelUtils {
 
     public static Level generateLevel(int levelNumber, int rowsCount, int columnsCount, int hiddenNumbersCount,
-                                      int timeToShowHiddenCells, int textSize) {
+                                      int timeToShowHiddenCells, int textSize, String name, int pictureId) {
         Map<Integer, HiddenNumberCell> hiddenNumbersPositions = new HashMap<>();
         List<Integer> ocuppiedRows = new ArrayList<>();
         List<Integer> ocuppiedColumns = new ArrayList<>();
@@ -21,7 +21,7 @@ public class LevelUtils {
         }
 
         return new Level(levelNumber, rowsCount, columnsCount, hiddenNumbersCount, timeToShowHiddenCells,
-                         hiddenNumbersPositions, textSize);
+                         hiddenNumbersPositions, textSize, name);
     }
 
     private static HiddenNumberCell generateHiddenNumberCell(int number, List<Integer> ocuppiedRows, List<Integer> ocuppiedColumns,

@@ -2,6 +2,7 @@ package com.lysov.vlad.hiddennumbers;
 
 import android.app.AlertDialog;
 import android.app.Dialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.res.Resources;
 import android.graphics.Color;
@@ -44,6 +45,7 @@ public class GameField extends ActionBarActivity {
 
     private static final int TIMER = 10;
     private static final int MAX_ERROR_NUMBERS = 3;
+    private static final int MAX_LEVEL_NUMBER = 33;
 
     private static boolean isGameStarted;
 
@@ -71,13 +73,7 @@ public class GameField extends ActionBarActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_game_field);
 
-        if (rightClick == null) {
-            rightClick = MediaPlayer.create(this, R.raw.game_field_click);
-        }
-
-        if (wrongClick == null) {
-            wrongClick = MediaPlayer.create(this, R.raw.button_sound_wrong);
-        }
+        initVibrationAndClicksAudio();Working version
 
         if (tracker == null) {
             AnalyticsApplication application = (AnalyticsApplication) getApplication();
@@ -93,9 +89,24 @@ public class GameField extends ActionBarActivity {
         timer = TIMER;
         initFont();
         initGameFieldTableLayout(currentLevel);
-        initShowTimer(currentLevel);
         initGameTimer(timer);
+        initShowTimer(currentLevel);
         showTimer.start();
+    }
+
+    private void initVibrationAndClicksAudio() {
+
+        if (vibrator == null) {
+            vibrator = (Vibrator) this.getSystemService(Context.VIBRATOR_SERVICE);
+        }
+
+        if (rightClick == null) {
+            rightClick = MediaPlayer.create(this, R.raw.game_field_click);
+        }
+
+        if (wrongClick == null) {
+            wrongClick = MediaPlayer.create(this, R.raw.button_sound_wrong);
+        }
     }
 
     @Override
@@ -139,13 +150,13 @@ public class GameField extends ActionBarActivity {
             @Override
             public void onFinish() {
                 showHiddenNumbers();
-                initHideTimer(currentLevel, currentLevel.getTimeToShowHiddenCells());
+                initHideTimer(currentLevel.getTimeToShowHiddenCells());
                 hideTimer.start();
             }
         };
     }
 
-    private void initHideTimer(final Level currentLevel, int time) {
+    private void initHideTimer(int time) {
         hideTimer = new CountDownTimer(time, 1000) {
 
             @Override
@@ -226,7 +237,7 @@ public class GameField extends ActionBarActivity {
                         clickedNumbers.add(clickedHiddenNumber);
                         hiddenButton.setTextSize(TypedValue.COMPLEX_UNIT_SP, currentLevel.getTextSize());
                         if (currentLevel.getHiddenNumbersCount() == clickedNumbers.size()) {
-                            if (currentLevelNumber == 23) {
+                            if (currentLevelNumber == MAX_LEVEL_NUMBER) {
                                 gameOver();
                             } else {
                                 gameTimer.cancel();
@@ -275,7 +286,7 @@ public class GameField extends ActionBarActivity {
     private View initButton() {
         Button button = new Button(this);
         button.setBackgroundResource(R.drawable.game_button);
-        button.setTextColor(Color.GREEN);
+        button.setTextColor(Color.rgb(0, 0, 139));
         button.setTypeface(tf);
         button.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -296,37 +307,37 @@ public class GameField extends ActionBarActivity {
         buttonGridLayoutParams.weight = 1.0f;
     }
 
-    private static Level generateLevel() {
+    private Level generateLevel() {
         if (currentLevelNumber < 2) {
-            return LevelUtils.generateLevel(currentLevelNumber, 3, 3, 2, 1000, 36);
+            return LevelUtils.generateLevel(currentLevelNumber, 3, 3, 2, 700, 36, "Ludvig Van Beethoven", R.drawable.ludvig_van_beethoven);
         }
 
         if (currentLevelNumber >= 2 && currentLevelNumber < 5) {
-            return LevelUtils.generateLevel(currentLevelNumber, 4, 4, 4, 2000, 32);
+            return LevelUtils.generateLevel(currentLevelNumber, 4, 4, 4, 1100, 32, "William Shakespeare", R.drawable.william_shakespeare);
         }
 
         if (currentLevelNumber >= 5 && currentLevelNumber < 9) {
-            return LevelUtils.generateLevel(currentLevelNumber, 5, 5, 5, 2500, 28);
+            return LevelUtils.generateLevel(currentLevelNumber, 5, 5, 5, 1600, 28, "Benjamin Franklin", R.drawable.benfranklin);
         }
 
         if (currentLevelNumber >= 9 && currentLevelNumber < 13) {
-            return LevelUtils.generateLevel(currentLevelNumber, 6, 6, 6, 3000, 24);
+            return LevelUtils.generateLevel(currentLevelNumber, 6, 6, 6, 2500, 24, "Socrates", R.drawable.socrates);
         }
 
         if (currentLevelNumber >= 13 && currentLevelNumber < 18) {
-            return LevelUtils.generateLevel(currentLevelNumber, 7, 7, 8, 3500, 22);
+            return LevelUtils.generateLevel(currentLevelNumber, 7, 7, 8, 3000, 22, "Galileo Galilei", R.drawable.galileo);
         }
 
         if (currentLevelNumber >= 18 && currentLevelNumber < 24) {
-            return LevelUtils.generateLevel(currentLevelNumber, 8, 8, 10, 4000, 20);
+            return LevelUtils.generateLevel(currentLevelNumber, 8, 8, 10, 3000, 20, "Leonardo Da Vinci", R.drawable.da_vinci);
         }
 
         if (currentLevelNumber >= 24 && currentLevelNumber < 28) {
-            return LevelUtils.generateLevel(currentLevelNumber, 8, 8, 12, 4000, 20);
+            return LevelUtils.generateLevel(currentLevelNumber, 8, 8, 12, 4000, 20, "Isaac Newton", R.drawable.newton);
         }
 
         if (currentLevelNumber >= 28 && currentLevelNumber < 34) {
-            return LevelUtils.generateLevel(currentLevelNumber, 9, 9, 15, 4000, 20);
+            return LevelUtils.generateLevel(currentLevelNumber, 9, 9, 15, 6000, 20, "Albert Einstein", R.drawable.einstein);
         }
 
         return null;
@@ -369,10 +380,14 @@ public class GameField extends ActionBarActivity {
 
         TextView gameOverScores = (TextView) scores_layout.findViewById(R.id.game_over_scores);
         gameOverScores.setTypeface(tf);
+        gameOverScores.setText(String.format(getResources().getString(R.string.game_over_points), String.valueOf(currentLevelNumber)));
 
-        TextView gameOverPoints = (TextView) scores_layout.findViewById(R.id.game_over_points);
+        TextView gameOverPoints = (TextView) scores_layout.findViewById(R.id.game_over_before_name_text);
         gameOverPoints.setTypeface(tf);
-        gameOverScores.setText(String.valueOf(currentLevelNumber));
+
+        TextView gameOverName = (TextView) scores_layout.findViewById(R.id.game_over_name);
+        gameOverName.setTypeface(tf);
+        gameOverName.setText(currentLevel.getName());
 
         final AlertDialog gameOverDialog = builder.create();
         ImageButton dialogButton = (ImageButton) scores_layout.findViewById(R.id.game_over_dialog_ok_btn);
@@ -445,7 +460,7 @@ public class GameField extends ActionBarActivity {
     }
 
     private void saveAndCancelTimerState() {
-        if (gameTimer != null && !isGameOver) {
+        if (gameTimer != null && !isGameOver && isGameStarted) {
             gameTimer.cancel();
             gameTimer = null;
             TextView time = (TextView) findViewById(R.id.time);

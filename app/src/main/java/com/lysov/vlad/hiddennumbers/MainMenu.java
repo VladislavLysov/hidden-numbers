@@ -59,7 +59,6 @@ public class MainMenu extends ActionBarActivity {
     private void setupButtonsOnClick() {
         final Animation shake = AnimationUtils.loadAnimation(this, R.anim.shake);
         ImageButton startGame = (ImageButton) findViewById(R.id.start_game_btn);
-        ImageButton exit = (ImageButton) findViewById(R.id.exit_btn);
         startGame.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -75,29 +74,12 @@ public class MainMenu extends ActionBarActivity {
                 MainMenu.this.startActivity(intent);
             }
         });
-
-        exit.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                v.startAnimation(shake);
-                click.start();
-                if (mInterstitialAd.isLoaded()) {
-                    mInterstitialAd.show();
-                } else {
-                    tracker.send(new HitBuilders.EventBuilder()
-                            .setCategory("Action")
-                            .setAction("Exit game")
-                            .build());
-                    System.exit(0);
-                }
-            }
-        });
     }
 
     private void initInterstitial() {
         if (mInterstitialAd == null) {
             mInterstitialAd = new InterstitialAd(this);
-            mInterstitialAd.setAdUnitId("ca-app-pub-3582002686029130/7345725608");
+            mInterstitialAd.setAdUnitId("ca-app-pub-3582002686029130/9690306000");
             requestNewInterstitial();
             mInterstitialAd.setAdListener(new AdListener() {
                 @Override

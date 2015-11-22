@@ -12,39 +12,11 @@ public class Level {
     private int hiddenNumbersCount;
     private int timeToShowHiddenCells;
     private int textSize;
+    private String name;
+    private int pictureId;
     private Map<Integer, HiddenNumberCell> hiddenNumbersPositions= new HashMap<>();
 
-    public Level(int rowsCount, int columnsCount, int hiddenNumbersCount) {
-        this.rowsCount = rowsCount;
-        this.columnsCount = columnsCount;
-        this.hiddenNumbersCount = hiddenNumbersCount;
-    }
-
-    public Level(int rowsCount, int columnsCount, int hiddenNumbersCount, Map<Integer, HiddenNumberCell> hiddenNumbersPositions) {
-        this.rowsCount = rowsCount;
-        this.columnsCount = columnsCount;
-        this.hiddenNumbersCount = hiddenNumbersCount;
-        this.hiddenNumbersPositions = hiddenNumbersPositions;
-    }
-
-    public Level(int levelNumber, int rowsCount, int columnsCount, int hiddenNumbersCount, Map<Integer, HiddenNumberCell> hiddenNumbersPositions) {
-        this.levelNumber = levelNumber;
-        this.rowsCount = rowsCount;
-        this.columnsCount = columnsCount;
-        this.hiddenNumbersCount = hiddenNumbersCount;
-        this.hiddenNumbersPositions = hiddenNumbersPositions;
-    }
-
-    public Level(int levelNumber, int rowsCount, int columnsCount, int hiddenNumbersCount, int timeToShowHiddenCells, Map<Integer, HiddenNumberCell> hiddenNumbersPositions) {
-        this.levelNumber = levelNumber;
-        this.rowsCount = rowsCount;
-        this.columnsCount = columnsCount;
-        this.hiddenNumbersCount = hiddenNumbersCount;
-        this.timeToShowHiddenCells = timeToShowHiddenCells;
-        this.hiddenNumbersPositions = hiddenNumbersPositions;
-    }
-
-    public Level(int levelNumber, int rowsCount, int columnsCount, int hiddenNumbersCount, int timeToShowHiddenCells, Map<Integer, HiddenNumberCell> hiddenNumbersPositions, int textSize) {
+    public Level(int levelNumber, int rowsCount, int columnsCount, int hiddenNumbersCount, int timeToShowHiddenCells, Map<Integer, HiddenNumberCell> hiddenNumbersPositions, int textSize, String name, int pictureId) {
         this.levelNumber = levelNumber;
         this.rowsCount = rowsCount;
         this.columnsCount = columnsCount;
@@ -52,6 +24,16 @@ public class Level {
         this.timeToShowHiddenCells = timeToShowHiddenCells;
         this.hiddenNumbersPositions = hiddenNumbersPositions;
         this.textSize = textSize;
+        this.name = name;
+        this.pictureId = pictureId;
+    }
+
+    public int getPictureId() {
+        return pictureId;
+    }
+
+    public void setPictureId(int pictureId) {
+        this.pictureId = pictureId;
     }
 
     public int getRowsCount() {
@@ -108,5 +90,13 @@ public class Level {
 
     public void setTextSize(int textSize) {
         this.textSize = textSize;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
     }
 }
