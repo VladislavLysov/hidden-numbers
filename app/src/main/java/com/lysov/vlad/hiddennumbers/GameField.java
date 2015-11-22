@@ -424,17 +424,17 @@ public class GameField extends ActionBarActivity {
             }
         });
 
-//        ImageButton shareButton = (ImageButton) scores_layout.findViewById(R.id.game_over_share_btn);
-//        shareButton.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-//                tracker.send(new HitBuilders.EventBuilder()
-//                        .setCategory("Action")
-//                        .setAction("Invite and share")
-//                        .build());
-//                inviteAndShare();
-//            }
-//        });
+        ImageButton shareButton = (ImageButton) scores_layout.findViewById(R.id.game_over_share_btn);
+        shareButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                tracker.send(new HitBuilders.EventBuilder()
+                        .setCategory("Action")
+                        .setAction("Invite and share")
+                        .build());
+                inviteAndShare();
+            }
+        });
 
         gameOverDialog.setOnKeyListener(new Dialog.OnKeyListener() {
 
@@ -505,7 +505,7 @@ public class GameField extends ActionBarActivity {
     private void inviteAndShare() {
         Intent intent = new Intent(Intent.ACTION_SEND);
         intent.setType("text/plain");
-        intent.putExtra(Intent.EXTRA_TEXT, "https://goo.gl/jLbpx6 \n\n" +  "Сheck Your Memory in \"Hidden numbers\" game!\n I've scored " + currentLevelNumber + " scores!");
+        intent.putExtra(Intent.EXTRA_TEXT, "https://goo.gl/5Mx0Wt \n\n" +  "Сheck Your Memory in \"Hidden numbers\" game!\n I've scored " + currentLevelNumber + " scores!");
         startActivity(Intent.createChooser(intent, "Share with"));
     }
 
