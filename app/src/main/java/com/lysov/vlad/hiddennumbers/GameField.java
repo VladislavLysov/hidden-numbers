@@ -4,6 +4,7 @@ import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.res.Resources;
 import android.graphics.Color;
 import android.graphics.Typeface;
@@ -21,10 +22,14 @@ import android.view.View;
 import android.widget.Button;
 
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.TableLayout;
 import android.widget.TableRow;
 import android.widget.TextView;
 
+import com.google.android.gms.ads.AdListener;
+import com.google.android.gms.ads.AdRequest;
+import com.google.android.gms.ads.InterstitialAd;
 import com.google.android.gms.analytics.HitBuilders;
 import com.google.android.gms.analytics.Tracker;
 
@@ -46,14 +51,17 @@ public class GameField extends ActionBarActivity {
     private static final int TIMER = 10;
     private static final int MAX_ERROR_NUMBERS = 3;
     private static final int MAX_LEVEL_NUMBER = 33;
+    private static final int INTERSTITIAL_SHOW_COUNT = 3;
 
     private static boolean isGameStarted;
+    private static InterstitialAd mInterstitialAd;
 
     private static int errors = 0;
 
     private TreeSet<Integer> clickedNumbers = new TreeSet<>();
 
     protected static int currentLevelNumber = 0;
+    private static int gameOversCount;
 
     private static MediaPlayer rightClick;
     private static MediaPlayer wrongClick;
@@ -73,7 +81,7 @@ public class GameField extends ActionBarActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_game_field);
 
-        initVibrationAndClicksAudio();Working version
+        initVibrationAndClicksAudio();
 
         if (tracker == null) {
             AnalyticsApplication application = (AnalyticsApplication) getApplication();
@@ -91,6 +99,8 @@ public class GameField extends ActionBarActivity {
         initGameFieldTableLayout(currentLevel);
         initGameTimer(timer);
         initShowTimer(currentLevel);
+        initInterstitial();
+        requestNewInterstitial();
         showTimer.start();
     }
 
@@ -255,21 +265,25 @@ public class GameField extends ActionBarActivity {
     }
 
     private void updateErrors() {
-        errors++;
-        TextView errorsTxt = (TextView) findViewById(R.id.errors);
-        if (vibrator.hasVibrator()) {
-            vibrator.vibrate(200);
-        }
-        wrongClick.start();
-        errorsTxt.setText(String.valueOf(errors));
-        if (errors >= MAX_ERROR_NUMBERS) {
-            gameOver();
+        if (isGameStarted) {
+            errors++;
+            TextView errorsTxt = (TextView) findViewById(R.id.errors);
+            if (vibrator.hasVibrator()) {
+                vibrator.vibrate(100);
+            }
+            wrongClick.start();
+            errorsTxt.setText(String.valueOf(errors));
+            if (errors >= MAX_ERROR_NUMBERS) {
+                gameOver();
+            }
         }
     }
 
     private void gameOver() {
         isGameOver = true;
         gameTimer.cancel();
+        gameTimer = null;
+        gameOversCount++;
         showGameOverDialog();
     }
 
@@ -321,23 +335,23 @@ public class GameField extends ActionBarActivity {
         }
 
         if (currentLevelNumber >= 9 && currentLevelNumber < 13) {
-            return LevelUtils.generateLevel(currentLevelNumber, 6, 6, 6, 2500, 24, "Socrates", R.drawable.socrates);
+            return LevelUtils.generateLevel(currentLevelNumber, 6, 6, 6, 3000, 24, "Socrates", R.drawable.socrates);
         }
 
         if (currentLevelNumber >= 13 && currentLevelNumber < 18) {
-            return LevelUtils.generateLevel(currentLevelNumber, 7, 7, 8, 3000, 22, "Galileo Galilei", R.drawable.galileo);
+            return LevelUtils.generateLevel(currentLevelNumber, 7, 7, 8, 3500, 22, "Galileo Galilei", R.drawable.galileo);
         }
 
         if (currentLevelNumber >= 18 && currentLevelNumber < 24) {
-            return LevelUtils.generateLevel(currentLevelNumber, 8, 8, 10, 3000, 20, "Leonardo Da Vinci", R.drawable.da_vinci);
+            return LevelUtils.generateLevel(currentLevelNumber, 7, 7, 10, 4500, 16, "Leonardo Da Vinci", R.drawable.da_vinci);
         }
 
         if (currentLevelNumber >= 24 && currentLevelNumber < 28) {
-            return LevelUtils.generateLevel(currentLevelNumber, 8, 8, 12, 4000, 20, "Isaac Newton", R.drawable.newton);
+            return LevelUtils.generateLevel(currentLevelNumber, 7, 7, 12, 5000, 16, "Isaac Newton", R.drawable.newton);
         }
 
         if (currentLevelNumber >= 28 && currentLevelNumber < 34) {
-            return LevelUtils.generateLevel(currentLevelNumber, 9, 9, 15, 6000, 20, "Albert Einstein", R.drawable.einstein);
+            return LevelUtils.generateLevel(currentLevelNumber, 7, 7, 15, 5500, 16, "Albert Einstein", R.drawable.einstein);
         }
 
         return null;
@@ -380,6 +394,7 @@ public class GameField extends ActionBarActivity {
 
         TextView gameOverScores = (TextView) scores_layout.findViewById(R.id.game_over_scores);
         gameOverScores.setTypeface(tf);
+        gameOverScores.setTextSize(TypedValue.COMPLEX_UNIT_SP, 30);
         gameOverScores.setText(String.format(getResources().getString(R.string.game_over_points), String.valueOf(currentLevelNumber)));
 
         TextView gameOverPoints = (TextView) scores_layout.findViewById(R.id.game_over_before_name_text);
@@ -391,6 +406,10 @@ public class GameField extends ActionBarActivity {
 
         final AlertDialog gameOverDialog = builder.create();
         ImageButton dialogButton = (ImageButton) scores_layout.findViewById(R.id.game_over_dialog_ok_btn);
+
+        ImageView gameOverPicture = (ImageView) scores_layout.findViewById(R.id.game_over_picture);
+        gameOverPicture.setImageResource(currentLevel.getPictureId());
+
         dialogButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -405,6 +424,18 @@ public class GameField extends ActionBarActivity {
             }
         });
 
+//        ImageButton shareButton = (ImageButton) scores_layout.findViewById(R.id.game_over_share_btn);
+//        shareButton.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//                tracker.send(new HitBuilders.EventBuilder()
+//                        .setCategory("Action")
+//                        .setAction("Invite and share")
+//                        .build());
+//                inviteAndShare();
+//            }
+//        });
+
         gameOverDialog.setOnKeyListener(new Dialog.OnKeyListener() {
 
             @Override
@@ -417,6 +448,7 @@ public class GameField extends ActionBarActivity {
                 return true;
             }
         });
+        showInterstitial();
         gameOverDialog.show();
     }
 
@@ -424,7 +456,9 @@ public class GameField extends ActionBarActivity {
     protected void onStop() {
         super.onStop();
         saveAndCancelTimerState();
-        MainMenu.mainMenuTheme.pause();
+        if (!MainMenu.isMainMenuVisible) {
+            MainMenu.mainMenuTheme.pause();
+        }
     }
 
     @Override
@@ -466,5 +500,48 @@ public class GameField extends ActionBarActivity {
             TextView time = (TextView) findViewById(R.id.time);
             timer = Integer.valueOf(String.valueOf(time.getText()));
         }
+    }
+
+    private void inviteAndShare() {
+        Intent intent = new Intent(Intent.ACTION_SEND);
+        intent.setType("text/plain");
+        intent.putExtra(Intent.EXTRA_TEXT, "https://goo.gl/jLbpx6 \n\n" +  "Сheck Your Memory in \"Hidden numbers\" game!\n I've scored " + currentLevelNumber + " scores!");
+        startActivity(Intent.createChooser(intent, "Share with"));
+    }
+
+    private void showInterstitial() {
+        if (gameOversCount == INTERSTITIAL_SHOW_COUNT) {
+            gameOversCount = 0;
+            if (mInterstitialAd.isLoaded()) {
+                mInterstitialAd.show();
+            }
+        }
+    }
+
+    private void initInterstitial() {
+        if (mInterstitialAd == null) {
+            mInterstitialAd = new InterstitialAd(this);
+            mInterstitialAd.setAdUnitId("ca-app-pub-3582002686029130/9690306000");
+//            mInterstitialAd.setAdUnitId("ca-app-pub-3940256099942544/1033173712"); // This is a test AdUnitId
+            requestNewInterstitial();
+            mInterstitialAd.setAdListener(new AdListener() {
+                @Override
+                public void onAdClosed() {
+                    tracker.send(new HitBuilders.EventBuilder()
+                            .setCategory("Action")
+                            .setAction("Exit game from interstitial")
+                            .build());
+                    requestNewInterstitial();
+                }
+            });
+        }
+    }
+
+    private void requestNewInterstitial() {
+        AdRequest adRequest = new AdRequest.Builder()
+                .addTestDevice(AdRequest.DEVICE_ID_EMULATOR)
+                .build();
+
+        mInterstitialAd.loadAd(adRequest);
     }
 }

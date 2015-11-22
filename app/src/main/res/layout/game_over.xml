@@ -21,7 +21,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:gravity="center"
-            android:textSize="26sp"
+            android:textSize="30sp"
             android:textStyle="bold"
             android:textColor="#fc010002"
             android:text="@string/game_over_text"/>
@@ -31,13 +31,11 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:gravity="center"
-            android:textSize="26sp"
             android:textStyle="bold"
             android:textColor="#fc010002" />
 
         <ImageView
-            android:id="@+id/game_over_vision_animal"
-            android:src="@drawable/da_vinci"
+            android:id="@+id/game_over_picture"
             android:layout_marginTop="20dp"
             android:layout_width="280sp"
             android:layout_height="170dp"
@@ -49,7 +47,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textColor="#fc010002"
-            android:textSize="26sp"
+            android:textSize="30sp"
             android:text="@string/game_over_memory_text"
             android:gravity="center"
             android:layout_gravity="center"
@@ -61,7 +59,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textColor="#fc010002"
-            android:textSize="26sp"
+            android:textSize="30sp"
             android:gravity="center"
             android:layout_gravity="center"
             android:textStyle="bold" />

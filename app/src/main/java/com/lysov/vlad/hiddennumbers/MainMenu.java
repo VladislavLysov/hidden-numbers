@@ -11,9 +11,6 @@ import android.view.animation.AnimationUtils;
 import android.widget.ImageButton;
 
 import com.facebook.FacebookSdk;
-import com.google.android.gms.ads.AdListener;
-import com.google.android.gms.ads.AdRequest;
-import com.google.android.gms.ads.InterstitialAd;
 import com.google.android.gms.analytics.GoogleAnalytics;
 import com.google.android.gms.analytics.HitBuilders;
 import com.google.android.gms.analytics.Tracker;
@@ -23,7 +20,8 @@ public class MainMenu extends ActionBarActivity {
 
     public static MediaPlayer mainMenuTheme;
     private static MediaPlayer click;
-    private static InterstitialAd mInterstitialAd;
+
+    protected static boolean isMainMenuVisible;
 
     private Tracker tracker;
 
@@ -42,8 +40,6 @@ public class MainMenu extends ActionBarActivity {
         click = MediaPlayer.create(this.getBaseContext(), R.raw.game_field_click);
         mainMenuTheme = MediaPlayer.create(this.getBaseContext(), R.raw.main_menu_music);
         mainMenuTheme.setLooping(true);
-        initInterstitial();
-        requestNewInterstitial();
         mainMenuTheme.start();
     }
 
@@ -76,46 +72,16 @@ public class MainMenu extends ActionBarActivity {
         });
     }
 
-    private void initInterstitial() {
-        if (mInterstitialAd == null) {
-            mInterstitialAd = new InterstitialAd(this);
-            mInterstitialAd.setAdUnitId("ca-app-pub-3582002686029130/9690306000");
-            requestNewInterstitial();
-            mInterstitialAd.setAdListener(new AdListener() {
-                @Override
-                public void onAdClosed() {
-                    tracker.send(new HitBuilders.EventBuilder()
-                            .setCategory("Action")
-                            .setAction("Exit game from interstitial")
-                            .build());
-                    MainMenu.this.finish();
-                    System.exit(0);
-                }
-            });
-        }
-    }
-
-    private void requestNewInterstitial() {
-        AdRequest adRequest = new AdRequest.Builder()
-                .addTestDevice(AdRequest.DEVICE_ID_EMULATOR)
-                .build();
-
-        mInterstitialAd.loadAd(adRequest);
-    }
-
     @Override
     public void onBackPressed() {
         super.onBackPressed();
         mainMenuTheme.pause();
-        requestNewInterstitial();
-        if (mInterstitialAd.isLoaded()) {
-            mInterstitialAd.show();
-        }
     }
 
     @Override
     protected void onStart() {
         super.onStart();
+        isMainMenuVisible = true;
         isNewGamePressed = false;
         mainMenuTheme.start();
     }
@@ -123,6 +89,7 @@ public class MainMenu extends ActionBarActivity {
     @Override
     protected void onResume() {
         super.onResume();
+        isMainMenuVisible = true;
         isNewGamePressed = false;
         mainMenuTheme.start();
     }
@@ -130,6 +97,7 @@ public class MainMenu extends ActionBarActivity {
     @Override
     protected void onStop() {
         super.onStop();
+        isMainMenuVisible = false;
         if (!isNewGamePressed) {
             mainMenuTheme.pause();
         }
@@ -138,6 +106,7 @@ public class MainMenu extends ActionBarActivity {
     @Override
     protected void onPause() {
         super.onPause();
+        isMainMenuVisible = false;
         if (!isNewGamePressed) {
             mainMenuTheme.pause();
         }

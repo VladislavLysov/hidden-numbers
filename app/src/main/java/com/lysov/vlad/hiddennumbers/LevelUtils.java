@@ -21,7 +21,7 @@ public class LevelUtils {
         }
 
         return new Level(levelNumber, rowsCount, columnsCount, hiddenNumbersCount, timeToShowHiddenCells,
-                         hiddenNumbersPositions, textSize, name);
+                         hiddenNumbersPositions, textSize, name, pictureId);
     }
 
     private static HiddenNumberCell generateHiddenNumberCell(int number, List<Integer> ocuppiedRows, List<Integer> ocuppiedColumns,
